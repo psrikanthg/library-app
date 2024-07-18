@@ -1,0 +1,45 @@
+image: node:14
+
+definitions:
+  steps:
+    - step: &npm-install
+       name: npm install
+       size: 2x
+       script:
+        - npm install -g 
+    - step: &deplyoment
+        name: db changes
+        size: 2x # If more resources are required to run this build, we can consider using a custom runner https://bitbucket.org/blog/pipelines-runners
+        
+        script:
+          - npm install
+          - npm install -g 
+          
+      
+
+  services:
+    docker:
+      memory: 1024
+
+pipelines:
+  default: 
+     - step: *npm-install
+  branches:
+    # Have to run builds sequentially as there is not enough memory to run the build in std 2x step size.
+   master:
+    - step:
+            <<: *deplyoment
+            name: UAT
+            deployment: Uat
+            
+    - step:
+            <<: *deplyoment
+            name: Staging
+            trigger: manual
+            deployment: Staging  
+
+    - step:
+            <<: *deplyoment
+            name: Prod
+            trigger: manual
+            deployment: Production                  
